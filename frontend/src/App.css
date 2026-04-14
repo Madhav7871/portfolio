@@ -46,7 +46,7 @@ body {
 
 .hero-scroll {
   position: relative;
-  height: 500vh;
+  height: 300vh;
 }
 
 .hero-sticky {
@@ -419,7 +419,7 @@ body {
 
 @media (max-width: 768px) {
   .hero-scroll {
-    height: 380vh;
+    height: 240vh;
   }
 
   .hero-name {
