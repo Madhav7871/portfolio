@@ -99,6 +99,27 @@ const Portfolio = () => {
       });
   }, []);
 
+  // NEW: Intersection Observer to animate page content smoothly on scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("show-section");
+          }
+        });
+      },
+      { threshold: 0.15 }, // Triggers when 15% of the element is visible
+    );
+
+    const hiddenElements = document.querySelectorAll(".hide-section");
+    hiddenElements.forEach((el) => observer.observe(el));
+
+    return () => {
+      hiddenElements.forEach((el) => observer.unobserve(el));
+    };
+  }, []);
+
   useEffect(() => {
     const heroElement = heroScrollRef.current;
     const canvas = canvasRef.current;
@@ -134,8 +155,7 @@ const Portfolio = () => {
       // Keep horizontal center
       const offsetX = (viewportWidth - drawWidth) / 2;
 
-      // FIX: Mobile Image Framing
-      // If screen is narrow (mobile), focus 15% from the top instead of 50% center
+      // Focus 15% from the top for mobile so it doesn't zoom too far into your face
       const isMobile = viewportWidth <= 768;
       const verticalFocus = isMobile ? 0.15 : 0.5;
       const offsetY = (viewportHeight - drawHeight) * verticalFocus;
@@ -178,8 +198,11 @@ const Portfolio = () => {
     };
   }, []);
 
-  const nameOpacity = Math.max(0, Math.min(1, (scrollProgress - 0.05) / 0.2));
-  const roleOpacity = Math.max(0, Math.min(1, (scrollProgress - 0.25) / 0.2));
+  // Adjusted the math slightly so it waits a tiny bit before fading in
+  const nameOpacity = Math.max(0, Math.min(1, (scrollProgress - 0.08) / 0.2));
+  const roleOpacity = Math.max(0, Math.min(1, (scrollProgress - 0.2) / 0.2));
+  // Added actions opacity so buttons fade in after the text
+  const actionsOpacity = Math.max(0, Math.min(1, (scrollProgress - 0.3) / 0.2));
 
   const handleContactInputChange = (event) => {
     const { name, value } = event.target;
@@ -227,8 +250,29 @@ const Portfolio = () => {
 
   return (
     <main className="portfolio-page">
-      {/* Mobile Responsiveness Styles */}
+      {/* Styles for Animations & Layout Fixes */}
       <style>{`
+        /* Smooth Scroll Animations for rest of the page */
+        .hide-section {
+          opacity: 0;
+          transform: translateY(30px);
+          transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .show-section {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        /* Fix for buttons overlapping text */
+        .hero-btn {
+          white-space: nowrap !important;
+          transition: transform 0.2s ease-out, background-color 0.2s;
+        }
+        
+        .hero-btn:hover {
+          transform: scale(1.05);
+        }
+
         @media (max-width: 768px) {
           .hero-overlay { 
             padding: 0 20px; 
@@ -236,11 +280,19 @@ const Portfolio = () => {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            padding-top: 40vh; /* FIX: Pushes text below your face */
+            padding-top: 40vh; /* Pushes text below your face */
           }
           .hero-name { font-size: 2.5rem !important; }
           .hero-role { font-size: 1.2rem !important; margin-bottom: 20px; }
-          .hero-actions { display: flex; flex-direction: column; width: 100%; align-items: center; gap: 15px; }
+          
+          /* Fixed button layout for mobile */
+          .hero-actions { 
+            display: flex; 
+            flex-direction: column; /* Stack buttons on top of each other */
+            width: 100%; 
+            align-items: center; 
+            gap: 15px; 
+          }
           .hero-btn { width: 80%; text-align: center; }
           
           .portfolio-container { padding: 20px 15px !important; }
@@ -263,11 +315,14 @@ const Portfolio = () => {
 
           <div className="hero-overlay hero-overlay-center">
             <p className="hero-tagline">Software Developer and Tech Learner</p>
+
+            {/* Added CSS transitions so the scroll updates glide smoothly */}
             <h1
               className="hero-name"
               style={{
                 opacity: nameOpacity,
-                transform: `translateY(${(1 - nameOpacity) * 20}px)`,
+                transform: `translateY(${(1 - nameOpacity) * 40}px)`,
+                transition: "opacity 0.3s ease-out, transform 0.3s ease-out",
               }}
             >
               Madhav Kalra.
@@ -276,12 +331,20 @@ const Portfolio = () => {
               className="hero-role"
               style={{
                 opacity: roleOpacity,
-                transform: `translateY(${(1 - roleOpacity) * 20}px)`,
+                transform: `translateY(${(1 - roleOpacity) * 40}px)`,
+                transition: "opacity 0.3s ease-out, transform 0.3s ease-out",
               }}
             >
               CSE Student | Developer | Problem Solver
             </h2>
-            <div className="hero-actions">
+            <div
+              className="hero-actions"
+              style={{
+                opacity: actionsOpacity,
+                transform: `translateY(${(1 - actionsOpacity) * 40}px)`,
+                transition: "opacity 0.3s ease-out, transform 0.3s ease-out",
+              }}
+            >
               <a
                 href={socialLinks.github}
                 target="_blank"
@@ -306,7 +369,8 @@ const Portfolio = () => {
       </section>
 
       <div className="portfolio-container">
-        <section className="about-section">
+        {/* Added 'hide-section' to enable scroll animations */}
+        <section className="about-section hide-section">
           <h2>About Me</h2>
           <p>
             Hello, I am Madhav Kalra. I am currently pursuing B.Tech in Computer
@@ -322,7 +386,7 @@ const Portfolio = () => {
           </p>
         </section>
 
-        <section className="education-section">
+        <section className="education-section hide-section">
           <h2>Education</h2>
           <div className="timeline">
             <article className="timeline-card">
@@ -339,7 +403,7 @@ const Portfolio = () => {
         </section>
 
         {/* Skills Section */}
-        <section className="skills-section">
+        <section className="skills-section hide-section">
           <h2>Technical Arsenal</h2>
           <div className="skills-grid">
             {skills.map((skill, index) => (
@@ -351,7 +415,7 @@ const Portfolio = () => {
         </section>
 
         {/* Projects Section */}
-        <section className="projects-section">
+        <section className="projects-section hide-section">
           <h2>Featured Projects</h2>
 
           {backendLoading ? (
@@ -385,7 +449,7 @@ const Portfolio = () => {
           )}
         </section>
 
-        <section className="connect-section">
+        <section className="connect-section hide-section">
           <h2>Let us Connect</h2>
           <p>
             If you are interested in technology, collaboration, or discussing
