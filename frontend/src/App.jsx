@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 
 const Portfolio = () => {
@@ -13,10 +13,6 @@ const Portfolio = () => {
     phone: "",
     message: "",
   });
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const heroScrollRef = useRef(null);
-  const canvasRef = useRef(null);
-  const imageRef = useRef(null);
 
   const socialLinks = {
     github: "https://github.com/Madhav7871",
@@ -99,7 +95,7 @@ const Portfolio = () => {
       });
   }, []);
 
-  // NEW: Intersection Observer to animate page content smoothly on scroll
+  // Intersection Observer to animate page content smoothly on scroll
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -119,90 +115,6 @@ const Portfolio = () => {
       hiddenElements.forEach((el) => observer.unobserve(el));
     };
   }, []);
-
-  useEffect(() => {
-    const heroElement = heroScrollRef.current;
-    const canvas = canvasRef.current;
-    if (!heroElement || !canvas) {
-      return undefined;
-    }
-
-    const ctx = canvas.getContext("2d");
-    const image = new Image();
-    image.src = "/Picsart_26-04-13_21-29-10-465.jpg.jpeg";
-    imageRef.current = image;
-
-    const drawFrame = (progressValue) => {
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      canvas.width = viewportWidth;
-      canvas.height = viewportHeight;
-
-      const loadedImage = imageRef.current;
-      if (!loadedImage || !loadedImage.complete) {
-        return;
-      }
-
-      // Responsive math for canvas background scaling
-      const scale = 1 + progressValue * 0.35;
-      const coverScale = Math.max(
-        viewportWidth / loadedImage.width,
-        viewportHeight / loadedImage.height,
-      );
-      const drawWidth = loadedImage.width * coverScale * scale;
-      const drawHeight = loadedImage.height * coverScale * scale;
-
-      // Keep horizontal center
-      const offsetX = (viewportWidth - drawWidth) / 2;
-
-      // Focus 15% from the top for mobile so it doesn't zoom too far into your face
-      const isMobile = viewportWidth <= 768;
-      const verticalFocus = isMobile ? 0.15 : 0.5;
-      const offsetY = (viewportHeight - drawHeight) * verticalFocus;
-
-      ctx.clearRect(0, 0, viewportWidth, viewportHeight);
-      ctx.drawImage(loadedImage, offsetX, offsetY, drawWidth, drawHeight);
-
-      const overlay = ctx.createLinearGradient(0, 0, 0, viewportHeight);
-      overlay.addColorStop(0, "rgba(3, 6, 16, 0.20)");
-      overlay.addColorStop(0.6, "rgba(3, 6, 16, 0.45)");
-      overlay.addColorStop(1, "rgba(3, 6, 16, 0.75)");
-      ctx.fillStyle = overlay;
-      ctx.fillRect(0, 0, viewportWidth, viewportHeight);
-    };
-
-    const updateScroll = () => {
-      const top = heroElement.offsetTop;
-      const distance = heroElement.offsetHeight - window.innerHeight;
-      const current = window.scrollY - top;
-      const progressValue = Math.max(0, Math.min(1, current / distance));
-      setScrollProgress(progressValue);
-      drawFrame(progressValue);
-    };
-
-    const handleResize = () => {
-      updateScroll();
-    };
-
-    image.onload = () => {
-      drawFrame(0);
-    };
-
-    window.addEventListener("scroll", updateScroll, { passive: true });
-    window.addEventListener("resize", handleResize);
-    updateScroll();
-
-    return () => {
-      window.removeEventListener("scroll", updateScroll);
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
-
-  // Adjusted the math slightly so it waits a tiny bit before fading in
-  const nameOpacity = Math.max(0, Math.min(1, (scrollProgress - 0.08) / 0.2));
-  const roleOpacity = Math.max(0, Math.min(1, (scrollProgress - 0.2) / 0.2));
-  // Added actions opacity so buttons fade in after the text
-  const actionsOpacity = Math.max(0, Math.min(1, (scrollProgress - 0.3) / 0.2));
 
   const handleContactInputChange = (event) => {
     const { name, value } = event.target;
@@ -250,142 +162,577 @@ const Portfolio = () => {
 
   return (
     <main className="portfolio-page">
-      {/* Styles for Animations & Layout Fixes */}
       <style>{`
-        /* Smooth Scroll Animations for rest of the page */
+        :root {
+          --bg-dark: #050814;
+          --bg-card: rgba(20, 25, 40, 0.6);
+          --text-main: #f8fafc;
+          --text-muted: #94a3b8;
+          --accent-primary: #6366f1;
+          --accent-primary-hover: #4f46e5;
+          --accent-secondary: #0ea5e9;
+          --glass-border: rgba(255, 255, 255, 0.08);
+          --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+          margin: 0;
+          font-family: var(--font-sans);
+          background-color: var(--bg-dark);
+          color: var(--text-main);
+          overflow-x: hidden;
+        }
+
+        /* Smooth Scroll Animations */
         .hide-section {
           opacity: 0;
-          transform: translateY(30px);
-          transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+          transform: translateY(40px);
+          transition: opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         .show-section {
           opacity: 1;
           transform: translateY(0);
         }
 
-        /* Fix for buttons overlapping text */
-        .hero-btn {
-          white-space: nowrap !important;
-          transition: transform 0.2s ease-out, background-color 0.2s;
-        }
-        
-        .hero-btn:hover {
-          transform: scale(1.05);
+        /* --- Upgraded Hero Section --- */
+        .hero-section {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          padding: 0 20px;
+          position: relative;
+          overflow: hidden;
+          background: var(--bg-dark);
         }
 
+        /* Animated Ambient Glowing Orbs */
+        .hero-section::before,
+        .hero-section::after {
+          content: '';
+          position: absolute;
+          width: 50vw;
+          height: 50vw;
+          max-width: 600px;
+          max-height: 600px;
+          border-radius: 50%;
+          filter: blur(120px);
+          z-index: 0;
+          animation: floatOrb 10s infinite ease-in-out alternate;
+        }
+        .hero-section::before {
+          background: rgba(99, 102, 241, 0.12); /* Indigo glow */
+          top: -10%;
+          left: -10%;
+        }
+        .hero-section::after {
+          background: rgba(14, 165, 233, 0.1); /* Cyan glow */
+          bottom: -10%;
+          right: -10%;
+          animation-delay: -5s;
+        }
+
+        @keyframes floatOrb {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(30px, 50px) scale(1.1); }
+        }
+
+        /* Glassmorphism Hero Card */
+        .hero-content {
+          position: relative;
+          z-index: 1;
+          max-width: 800px;
+          padding: 4rem 3rem;
+          border-radius: 24px;
+          background: rgba(255, 255, 255, 0.02);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid var(--glass-border);
+          box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        /* --- Welcome Badge & Pulse Animation --- */
+        .welcome-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 6px 16px;
+          background: rgba(99, 102, 241, 0.1);
+          border: 1px solid rgba(99, 102, 241, 0.3);
+          border-radius: 50px;
+          color: #a5b4fc;
+          font-size: 0.85rem;
+          font-weight: 600;
+          letter-spacing: 2px;
+          margin-bottom: 2rem;
+          text-transform: uppercase;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .pulse-dot {
+          width: 8px;
+          height: 8px;
+          background-color: #10b981;
+          border-radius: 50%;
+          box-shadow: 0 0 10px #10b981;
+          animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+          70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .hero-tagline {
+          text-transform: uppercase;
+          letter-spacing: 3px;
+          font-size: 0.85rem;
+          color: var(--accent-secondary);
+          font-weight: 600;
+          margin-bottom: 1.5rem;
+        }
+
+        .hero-name {
+          font-size: 4rem;
+          font-weight: 800;
+          margin: 10px 0;
+          background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          letter-spacing: -1px;
+          line-height: 1.2;
+          transition: text-shadow 0.3s ease;
+        }
+        
+        /* Interactive Hover Glow for Name */
+        .hero-name:hover {
+          text-shadow: 0 0 20px rgba(165, 180, 252, 0.8), 0 0 40px rgba(99, 102, 241, 0.4);
+          cursor: default;
+        }
+
+        .hero-role {
+          font-size: 1.25rem;
+          color: var(--text-muted);
+          margin-bottom: 2.5rem;
+          font-weight: 400;
+          letter-spacing: 0.5px;
+        }
+
+        /* Buttons */
+        .hero-actions {
+          display: flex;
+          justify-content: center;
+          gap: 20px;
+        }
+
+        .btn {
+          display: inline-block;
+          padding: 12px 28px;
+          border-radius: 12px;
+          font-size: 1rem;
+          font-weight: 600;
+          text-decoration: none;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          border: none;
+        }
+
+        .btn-primary {
+          background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+          color: white;
+          box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+        .btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-secondary {
+          background: rgba(255, 255, 255, 0.05);
+          color: white;
+          border: 1px solid var(--glass-border);
+          backdrop-filter: blur(10px);
+        }
+        .btn-secondary:hover {
+          background: rgba(255, 255, 255, 0.1);
+          transform: translateY(-2px);
+        }
+
+        /* Initial load animations */
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { opacity: 0; animation: fadeInUp 0.8s ease-out forwards; }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.3s; }
+        .delay-3 { animation-delay: 0.5s; }
+        .delay-4 { animation-delay: 0.7s; }
+        .delay-5 { animation-delay: 0.9s; }
+
+        /* --- Main Content Layout --- */
+        .portfolio-container {
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 60px 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 100px;
+        }
+
+        section h2 {
+          font-size: 2.5rem;
+          margin-bottom: 40px;
+          position: relative;
+          display: inline-block;
+        }
+        section h2::after {
+          content: '';
+          position: absolute;
+          bottom: -10px;
+          left: 0;
+          width: 60px;
+          height: 4px;
+          background: var(--accent-primary);
+          border-radius: 2px;
+        }
+
+        /* About Section */
+        .about-content {
+          display: flex;
+          align-items: center;
+          gap: 60px;
+          background: var(--bg-card);
+          padding: 40px;
+          border-radius: 24px;
+          border: 1px solid var(--glass-border);
+        }
+        .about-image {
+          width: 100%;
+          max-width: 300px;
+          border-radius: 16px;
+          object-fit: cover;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+          border: 1px solid rgba(255,255,255,0.1);
+        }
+        .about-text p {
+          color: var(--text-muted);
+          line-height: 1.8;
+          font-size: 1.1rem;
+          margin-bottom: 20px;
+        }
+
+        /* Education Timeline */
+        .timeline {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        .timeline-card {
+          background: var(--bg-card);
+          padding: 30px;
+          border-radius: 16px;
+          border: 1px solid var(--glass-border);
+          position: relative;
+          overflow: hidden;
+          transition: transform 0.3s ease;
+        }
+        .timeline-card:hover {
+          transform: translateX(10px);
+          border-color: rgba(99, 102, 241, 0.4);
+        }
+        .timeline-card h3 {
+          margin: 0 0 10px 0;
+          font-size: 1.3rem;
+          color: white;
+        }
+        .timeline-card p {
+          margin: 0 0 15px 0;
+          color: var(--text-muted);
+        }
+        .timeline-card span {
+          display: inline-block;
+          padding: 6px 12px;
+          background: rgba(99, 102, 241, 0.15);
+          color: var(--accent-primary);
+          border-radius: 20px;
+          font-size: 0.85rem;
+          font-weight: 600;
+        }
+
+        /* Skills Section */
+        .skills-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 15px;
+        }
+        .skill-badge {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid var(--glass-border);
+          padding: 12px 24px;
+          border-radius: 30px;
+          font-size: 1rem;
+          color: var(--text-main);
+          transition: all 0.3s ease;
+        }
+        .skill-badge:hover {
+          background: rgba(99, 102, 241, 0.1);
+          border-color: var(--accent-primary);
+          color: white;
+          transform: translateY(-3px);
+        }
+
+        /* Projects Section */
+        .project-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 30px;
+        }
+        .project-card {
+          background: var(--bg-card);
+          border: 1px solid var(--glass-border);
+          padding: 30px;
+          border-radius: 20px;
+          display: flex;
+          flex-direction: column;
+          transition: all 0.3s ease;
+        }
+        .project-card:hover {
+          transform: translateY(-10px);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+          border-color: rgba(255,255,255,0.15);
+        }
+        .project-card h3 {
+          font-size: 1.5rem;
+          margin: 0 0 15px 0;
+        }
+        .project-card p {
+          color: var(--text-muted);
+          line-height: 1.6;
+          margin-bottom: 25px;
+          flex-grow: 1;
+        }
+        .tech-stack {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-bottom: 25px;
+        }
+        .tech-item {
+          font-size: 0.8rem;
+          padding: 4px 10px;
+          background: rgba(14, 165, 233, 0.1);
+          color: var(--accent-secondary);
+          border-radius: 6px;
+        }
+        .project-link {
+          color: white;
+          text-decoration: none;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          transition: color 0.2s;
+        }
+        .project-link:hover {
+          color: var(--accent-secondary);
+        }
+
+        /* Connect Section */
+        .connect-section {
+          text-align: center;
+          background: linear-gradient(135deg, rgba(20,25,40,0.8), rgba(10,15,30,0.8));
+          padding: 60px 40px;
+          border-radius: 24px;
+          border: 1px solid var(--glass-border);
+        }
+        .connect-section h2::after {
+          left: 50%;
+          transform: translateX(-50%);
+        }
+        .connect-section p {
+          color: var(--text-muted);
+          font-size: 1.2rem;
+          margin-bottom: 40px;
+          max-width: 600px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .connect-links {
+          margin-top: 30px;
+          display: flex;
+          justify-content: center;
+          gap: 20px;
+        }
+        .connect-links a {
+          color: var(--text-muted);
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        .connect-links a:hover {
+          color: white;
+        }
+
+        /* Modal Styles */
+        .contact-modal-backdrop {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(8px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+          box-sizing: border-box;
+        }
+        .contact-modal {
+          background: #0f172a;
+          border: 1px solid var(--glass-border);
+          border-radius: 24px;
+          padding: 40px;
+          width: 100%;
+          max-width: 500px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .contact-modal h3 {
+          margin: 0 0 10px 0;
+          font-size: 1.8rem;
+        }
+        .contact-modal p {
+          color: var(--text-muted);
+          margin-bottom: 30px;
+        }
+        .contact-form {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+        }
+        .contact-form input,
+        .contact-form textarea {
+          width: 100%;
+          padding: 14px 16px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          color: white;
+          font-size: 1rem;
+          font-family: inherit;
+          box-sizing: border-box;
+          transition: border-color 0.3s;
+        }
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+          outline: none;
+          border-color: var(--accent-primary);
+          background: rgba(255, 255, 255, 0.05);
+        }
+        .contact-actions {
+          display: flex;
+          justify-content: flex-end;
+          gap: 15px;
+          margin-top: 10px;
+        }
+        .contact-status {
+          color: var(--accent-secondary);
+          font-size: 0.9rem;
+          margin: 0;
+        }
+
+        /* Mobile Responsiveness */
         @media (max-width: 768px) {
-          .hero-overlay { 
-            padding: 0 20px; 
-            text-align: center; 
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding-top: 40vh; /* Pushes text below your face */
-          }
-          .hero-name { font-size: 2.5rem !important; }
-          .hero-role { font-size: 1.2rem !important; margin-bottom: 20px; }
+          .hero-name { font-size: 2.8rem; }
+          .hero-role { font-size: 1.1rem; }
+          .hero-content { padding: 3rem 1.5rem; width: 90%; }
+          .hero-actions { flex-direction: column; }
           
-          /* Fixed button layout for mobile */
-          .hero-actions { 
-            display: flex; 
-            flex-direction: column; /* Stack buttons on top of each other */
-            width: 100%; 
-            align-items: center; 
-            gap: 15px; 
-          }
-          .hero-btn { width: 80%; text-align: center; }
+          .portfolio-container { padding: 40px 15px; gap: 70px; }
           
-          .portfolio-container { padding: 20px 15px !important; }
-          .about-section, .education-section, .skills-section, .projects-section, .connect-section { padding: 20px 0; }
+          .about-content { flex-direction: column; text-align: center; padding: 30px 20px; }
           
-          .skills-grid { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important; gap: 10px; }
-          .project-grid { display: grid !important; grid-template-columns: 1fr !important; gap: 20px; }
-          .timeline { flex-direction: column !important; gap: 20px; }
+          .skills-grid { justify-content: center; }
           
-          .contact-modal { width: 90% !important; max-width: 350px; padding: 20px !important; margin: 0 auto; }
-          .contact-form input, .contact-form textarea { width: 100%; box-sizing: border-box; }
-          .contact-actions { display: flex; flex-direction: column; gap: 10px; }
+          .project-grid { grid-template-columns: 1fr; }
+          
+          .contact-actions { flex-direction: column; }
           .contact-actions button { width: 100%; }
         }
       `}</style>
 
-      <section className="hero-scroll" ref={heroScrollRef}>
-        <div className="hero-sticky">
-          <canvas ref={canvasRef} className="hero-canvas" />
-
-          <div className="hero-overlay hero-overlay-center">
-            <p className="hero-tagline">Software Developer and Tech Learner</p>
-
-            {/* Added CSS transitions so the scroll updates glide smoothly */}
-            <h1
-              className="hero-name"
-              style={{
-                opacity: nameOpacity,
-                transform: `translateY(${(1 - nameOpacity) * 40}px)`,
-                transition: "opacity 0.3s ease-out, transform 0.3s ease-out",
-              }}
-            >
-              Madhav Kalra.
-            </h1>
-            <h2
-              className="hero-role"
-              style={{
-                opacity: roleOpacity,
-                transform: `translateY(${(1 - roleOpacity) * 40}px)`,
-                transition: "opacity 0.3s ease-out, transform 0.3s ease-out",
-              }}
-            >
-              CSE Student | Developer | Problem Solver
-            </h2>
-            <div
-              className="hero-actions"
-              style={{
-                opacity: actionsOpacity,
-                transform: `translateY(${(1 - actionsOpacity) * 40}px)`,
-                transition: "opacity 0.3s ease-out, transform 0.3s ease-out",
-              }}
-            >
-              <a
-                href={socialLinks.github}
-                target="_blank"
-                rel="noreferrer"
-                className="hero-btn hero-btn-primary"
-              >
-                Explore GitHub
-              </a>
-              <a
-                href={socialLinks.linkedin}
-                target="_blank"
-                rel="noreferrer"
-                className="hero-btn hero-btn-secondary"
-              >
-                Connect on LinkedIn
-              </a>
-            </div>
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div className="hero-content">
+          <div className="welcome-badge animate-fade-in delay-1">
+            <span className="pulse-dot"></span>
+            Hello, World!
           </div>
 
-          {/* <div className="scroll-hint">Scroll Down</div> */}
+          <p className="hero-tagline animate-fade-in delay-2">
+            Software Developer & Tech Learner
+          </p>
+          <h1 className="hero-name animate-fade-in delay-3">Madhav Kalra.</h1>
+          <h2 className="hero-role animate-fade-in delay-4">
+            CSE Student | Developer | Problem Solver
+          </h2>
+          <div className="hero-actions animate-fade-in delay-5">
+            <a
+              href={socialLinks.github}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-primary"
+            >
+              Explore GitHub
+            </a>
+            <a
+              href={socialLinks.linkedin}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-secondary"
+            >
+              Connect on LinkedIn
+            </a>
+          </div>
         </div>
       </section>
 
+      {/* Main Content */}
       <div className="portfolio-container">
-        {/* Added 'hide-section' to enable scroll animations */}
+        {/* About Section */}
         <section className="about-section hide-section">
           <h2>About Me</h2>
-          <p>
-            Hello, I am Madhav Kalra. I am currently pursuing B.Tech in Computer
-            Science Engineering from Bhagwan Parshuram Institute of Technology.
-            Before this, I completed a Diploma in Electronics and Communication
-            Engineering from Guru Tegh Bahadur Polytechnic Institute.
-          </p>
-          <p>
-            My ECE background built my foundation in technology, and now I am
-            diving deep into software development, programming, and modern web
-            technologies. I enjoy building projects, learning continuously, and
-            collaborating with people who love creating impactful ideas.
-          </p>
+          <div className="about-content">
+            <div className="about-image-container">
+              <img
+                src="/Picsart_26-04-13_21-29-10-465.jpg.jpeg"
+                alt="Madhav Kalra"
+                className="about-image"
+              />
+            </div>
+            <div className="about-text">
+              <p>
+                Hello, I am Madhav Kalra. I am currently pursuing B.Tech in
+                Computer Science Engineering from Bhagwan Parshuram Institute of
+                Technology. Before this, I completed a Diploma in Electronics
+                and Communication Engineering from Guru Tegh Bahadur Polytechnic
+                Institute.
+              </p>
+              <p>
+                My ECE background built my foundation in technology, and now I
+                am diving deep into software development, programming, and
+                modern web technologies. I enjoy building projects, learning
+                continuously, and collaborating with people who love creating
+                impactful ideas.
+              </p>
+            </div>
+          </div>
         </section>
 
+        {/* Education Section */}
         <section className="education-section hide-section">
           <h2>Education</h2>
           <div className="timeline">
@@ -417,9 +764,10 @@ const Portfolio = () => {
         {/* Projects Section */}
         <section className="projects-section hide-section">
           <h2>Featured Projects</h2>
-
           {backendLoading ? (
-            <p className="loading-text">Loading projects from server...</p>
+            <p className="loading-text" style={{ color: "var(--text-muted)" }}>
+              Loading projects from server...
+            </p>
           ) : (
             <div className="project-grid">
               {backendProjects.map((project) => (
@@ -433,50 +781,53 @@ const Portfolio = () => {
                       </span>
                     ))}
                   </div>
-                  {project.link ? (
+                  {project.link && (
                     <a
                       className="project-link"
                       href={project.link}
                       target="_blank"
                       rel="noreferrer"
                     >
-                      View Project
+                      View Source Code →
                     </a>
-                  ) : null}
+                  )}
                 </div>
               ))}
             </div>
           )}
         </section>
 
+        {/* Connect Section */}
         <section className="connect-section hide-section">
-          <h2>Let us Connect</h2>
+          <h2>Let's Build Together</h2>
           <p>
-            If you are interested in technology, collaboration, or discussing
-            innovative ideas, feel free to connect with me.
+            Whether you have a question, a project idea, or just want to say hi,
+            I'm always open to discussing new opportunities and technologies.
           </p>
           <button
             type="button"
-            className="connect-cta-btn"
+            className="btn btn-primary"
             onClick={() => {
               setContactStatus("");
               setContactModalOpen(true);
             }}
           >
-            Connect With Me
+            Send Me a Message
           </button>
           <div className="connect-links">
             <a href={socialLinks.github} target="_blank" rel="noreferrer">
-              GitHub Profile
+              GitHub
             </a>
+            <span>•</span>
             <a href={socialLinks.linkedin} target="_blank" rel="noreferrer">
-              LinkedIn Profile
+              LinkedIn
             </a>
           </div>
         </section>
       </div>
 
-      {contactModalOpen ? (
+      {/* Contact Modal */}
+      {contactModalOpen && (
         <div
           className="contact-modal-backdrop"
           onClick={() => setContactModalOpen(false)}
@@ -485,8 +836,8 @@ const Portfolio = () => {
             className="contact-modal"
             onClick={(event) => event.stopPropagation()}
           >
-            <h3>Send a Message</h3>
-            <p>Fill your details and I will connect with you soon.</p>
+            <h3>Get in Touch</h3>
+            <p>Fill out your details and I'll get back to you soon.</p>
             <form className="contact-form" onSubmit={submitContactForm}>
               <input
                 type="text"
@@ -499,7 +850,7 @@ const Portfolio = () => {
               <input
                 type="email"
                 name="email"
-                placeholder="Your Email ID"
+                placeholder="Your Email Address"
                 value={contactForm.email}
                 onChange={handleContactInputChange}
                 required
@@ -514,28 +865,28 @@ const Portfolio = () => {
               />
               <textarea
                 name="message"
-                placeholder="Your Message"
+                placeholder="How can I help you?"
                 rows="4"
                 value={contactForm.message}
                 onChange={handleContactInputChange}
                 required
               />
 
-              {contactStatus ? (
+              {contactStatus && (
                 <p className="contact-status">{contactStatus}</p>
-              ) : null}
+              )}
 
               <div className="contact-actions">
                 <button
                   type="button"
-                  className="contact-btn contact-btn-secondary"
+                  className="btn btn-secondary"
                   onClick={() => setContactModalOpen(false)}
                 >
-                  Close
+                  Cancel
                 </button>
                 <button
                   type="submit"
-                  className="contact-btn contact-btn-primary"
+                  className="btn btn-primary"
                   disabled={contactSending}
                 >
                   {contactSending ? "Sending..." : "Send Message"}
@@ -544,7 +895,7 @@ const Portfolio = () => {
             </form>
           </div>
         </div>
-      ) : null}
+      )}
     </main>
   );
 };
