@@ -1,3 +1,4 @@
+/* --- GLOBAL VARIABLES --- */
 :root {
   --bg-dark: #040814;
   --bg-card: rgba(12, 22, 42, 0.65);
@@ -12,15 +13,97 @@
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
 
-body {
+* {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
   font-family: var(--font-sans);
   background-color: var(--bg-dark);
   color: var(--text-main);
   overflow-x: hidden;
+  /* Required for the fixed grid to stay behind everything */
+  position: relative;
 }
 
-/* --- Hero Section --- */
+/* =========================================
+   1. FIXED BACKGROUND GRID & GLOWING ORBS 
+   ========================================= */
+
+/* The animated grid */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+  background-image:
+    linear-gradient(var(--glass-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--glass-border) 1px, transparent 1px);
+  background-size: 45px 45px;
+  animation: panGrid 45s linear infinite;
+  opacity: 0.5;
+}
+
+/* The ambient glowing orb */
+body::after {
+  content: "";
+  position: fixed;
+  top: -10%;
+  left: -10%;
+  width: 70vw;
+  height: 70vw;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(99, 179, 255, 0.08) 0%,
+    transparent 60%
+  );
+  z-index: -1;
+  filter: blur(80px);
+  animation: floatGlow 15s ease-in-out infinite alternate;
+}
+
+@keyframes panGrid {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 45px 45px;
+  }
+}
+
+@keyframes floatGlow {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(5vw, 5vh);
+  }
+}
+
+/* =========================================
+   2. SCROLL ANIMATIONS (Intersection Observer)
+   ========================================= */
+.hide-section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.show-section {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* =========================================
+   3. HERO SECTION 
+   ========================================= */
 .hero-section {
   min-height: 100vh;
   display: flex;
@@ -38,9 +121,9 @@ body {
   max-width: 850px;
   padding: 4.5rem 3.5rem;
   border-radius: 32px;
-  background: rgba(12, 22, 42, 0.3);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: rgba(12, 22, 42, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow:
     0 40px 80px rgba(0, 0, 0, 0.6),
@@ -57,36 +140,36 @@ body {
   align-items: center;
   gap: 12px;
   padding: 8px 20px;
-  background: rgba(6, 182, 212, 0.05);
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  background: rgba(99, 179, 255, 0.1);
+  border: 1px solid rgba(99, 179, 255, 0.3);
   border-radius: 50px;
-  color: var(--accent-secondary);
+  color: var(--accent-primary);
   font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 2.5px;
   margin-bottom: 2.5rem;
   text-transform: uppercase;
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.1);
+  box-shadow: 0 0 20px rgba(99, 179, 255, 0.15);
 }
 
 .pulse-dot {
   width: 8px;
   height: 8px;
-  background-color: var(--accent-secondary);
+  background-color: var(--accent-primary);
   border-radius: 50%;
-  box-shadow: 0 0 10px var(--accent-secondary);
+  box-shadow: 0 0 10px var(--accent-primary);
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 var(--accent-secondary-glow);
+    box-shadow: 0 0 0 0 var(--accent-primary-glow);
   }
   70% {
-    box-shadow: 0 0 0 12px rgba(6, 182, 212, 0);
+    box-shadow: 0 0 0 12px rgba(99, 179, 255, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(6, 182, 212, 0);
+    box-shadow: 0 0 0 0 rgba(99, 179, 255, 0);
   }
 }
 
@@ -102,7 +185,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 4px;
   font-size: 0.9rem;
-  color: var(--accent-primary);
+  color: var(--text-muted);
   font-weight: 600;
   overflow: hidden;
   white-space: nowrap;
@@ -131,6 +214,7 @@ body {
   }
 }
 
+/* Hero Name & Role */
 .hero-name {
   font-size: clamp(3rem, 7vw, 4.8rem);
   font-weight: 800;
@@ -138,10 +222,11 @@ body {
   background: linear-gradient(
     135deg,
     #ffffff 0%,
-    #cbd5e1 50%,
-    var(--accent-secondary) 100%
+    #d2e2ff 50%,
+    var(--accent-primary) 100%
   );
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -2px;
   line-height: 1.1;
@@ -152,7 +237,7 @@ body {
 .hero-name:hover {
   text-shadow:
     0 0 30px rgba(255, 255, 255, 0.4),
-    0 0 60px var(--accent-secondary-glow);
+    0 0 60px var(--accent-primary-glow);
   cursor: default;
 }
 
@@ -165,7 +250,7 @@ body {
   text-align: center;
 }
 
-/* Buttons */
+/* Hero Buttons */
 .hero-actions {
   display: flex;
   justify-content: center;
@@ -185,12 +270,14 @@ body {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
-  position: relative;
-  overflow: hidden;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-primary), #4f46e5);
+  background: linear-gradient(
+    135deg,
+    var(--accent-primary),
+    var(--accent-secondary)
+  );
   color: white;
   box-shadow: 0 10px 25px -5px var(--accent-primary-glow);
 }
@@ -200,19 +287,19 @@ body {
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.05);
   color: white;
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(10px);
 }
 .btn-secondary:hover {
-  background: rgba(6, 182, 212, 0.1);
-  border-color: var(--accent-secondary);
+  background: rgba(99, 179, 255, 0.15);
+  border-color: var(--accent-primary);
   transform: translateY(-3px);
-  box-shadow: 0 10px 25px -5px var(--accent-secondary-glow);
+  box-shadow: 0 10px 25px -5px var(--accent-primary-glow);
 }
 
-/* Initial load animations */
+/* Load Animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -243,7 +330,9 @@ body {
   animation-delay: 0.9s;
 }
 
-/* --- Main Content Layout --- */
+/* =========================================
+   4. MAIN CONTENT LAYOUT 
+   ========================================= */
 .portfolio-container {
   max-width: 1100px;
   margin: 0 auto;
@@ -256,13 +345,14 @@ body {
 }
 
 section h2 {
-  font-size: 2.8rem;
+  font-size: clamp(2rem, 5vw, 2.8rem);
   margin-bottom: 50px;
   position: relative;
   display: inline-block;
   font-weight: 700;
   letter-spacing: -1px;
 }
+
 section h2::after {
   content: "";
   position: absolute;
@@ -279,7 +369,7 @@ section h2::after {
   box-shadow: 0 0 10px var(--accent-primary-glow);
 }
 
-/* About Section */
+/* --- About Section --- */
 .about-content {
   display: flex;
   align-items: center;
@@ -291,12 +381,8 @@ section h2::after {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  position: relative;
-  overflow: hidden;
 }
-.about-image-container {
-  z-index: 1;
-}
+
 .about-image {
   width: 100%;
   max-width: 320px;
@@ -311,9 +397,6 @@ section h2::after {
   border-color: rgba(99, 179, 255, 0.4);
 }
 
-.about-text {
-  z-index: 1;
-}
 .about-text p {
   color: var(--text-muted);
   line-height: 1.8;
@@ -321,7 +404,7 @@ section h2::after {
   margin-bottom: 20px;
 }
 
-/* Education Timeline */
+/* --- Education Timeline --- */
 .timeline {
   display: flex;
   flex-direction: column;
@@ -345,7 +428,6 @@ section h2::after {
   border-radius: 24px;
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   position: relative;
   transition: all 0.4s ease;
 }
@@ -388,35 +470,35 @@ section h2::after {
   border: 1px solid rgba(99, 179, 255, 0.2);
 }
 
-/* Skills Section */
+/* --- Skills Section --- */
 .skills-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
 }
 .skill-badge {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(12, 22, 42, 0.4);
   border: 1px solid var(--glass-border);
   padding: 14px 28px;
   border-radius: 12px;
   font-size: 1.05rem;
   color: var(--text-muted);
   font-weight: 500;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
   backdrop-filter: blur(12px);
 }
 .skill-badge:hover {
-  background: rgba(6, 182, 212, 0.1);
-  border-color: var(--accent-secondary);
+  background: rgba(99, 179, 255, 0.1);
+  border-color: var(--accent-primary);
   color: white;
   transform: translateY(-4px);
-  box-shadow: 0 10px 20px -5px var(--accent-secondary-glow);
+  box-shadow: 0 10px 20px -5px var(--accent-primary-glow);
 }
 
-/* Projects Section */
+/* --- Projects Section --- */
 .project-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 35px;
 }
 .project-card {
@@ -429,7 +511,6 @@ section h2::after {
   transition: all 0.4s ease;
   position: relative;
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
 }
 .project-card::before {
   content: "";
@@ -482,10 +563,10 @@ section h2::after {
   font-size: 0.8rem;
   font-weight: 600;
   padding: 6px 12px;
-  background: rgba(6, 182, 212, 0.08);
-  color: var(--accent-secondary);
+  background: rgba(99, 179, 255, 0.08);
+  color: var(--accent-primary);
   border-radius: 8px;
-  border: 1px solid rgba(6, 182, 212, 0.15);
+  border: 1px solid rgba(99, 179, 255, 0.15);
 }
 .project-link {
   color: white;
@@ -499,11 +580,11 @@ section h2::after {
     transform 0.2s;
 }
 .project-link:hover {
-  color: var(--accent-secondary);
+  color: var(--accent-primary);
   transform: translateX(5px);
 }
 
-/* Connect Section */
+/* --- Connect Section --- */
 .connect-section {
   text-align: center;
   background: rgba(12, 22, 42, 0.4);
@@ -546,7 +627,9 @@ section h2::after {
   text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
 }
 
-/* Modal Styles */
+/* =========================================
+   5. CONTACT MODAL 
+   ========================================= */
 .contact-modal-backdrop {
   position: fixed;
   top: 0;
@@ -560,7 +643,6 @@ section h2::after {
   justify-content: center;
   z-index: 1000;
   padding: 20px;
-  box-sizing: border-box;
 }
 .contact-modal {
   background: #0a0f1a;
@@ -610,7 +692,6 @@ section h2::after {
   color: white;
   font-size: 1.05rem;
   font-family: inherit;
-  box-sizing: border-box;
   transition: all 0.3s ease;
 }
 .contact-form input:focus,
@@ -627,16 +708,18 @@ section h2::after {
   margin-top: 15px;
 }
 .contact-status {
-  color: var(--accent-secondary);
+  color: var(--accent-primary);
   font-size: 0.95rem;
   margin: 0;
   padding: 10px;
-  background: rgba(6, 182, 212, 0.1);
+  background: rgba(99, 179, 255, 0.1);
   border-radius: 8px;
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  border: 1px solid rgba(99, 179, 255, 0.2);
 }
 
-/* --- Mobile Responsiveness Overhaul --- */
+/* =========================================
+   6. MOBILE RESPONSIVENESS 
+   ========================================= */
 @media (max-width: 768px) {
   .hero-content {
     padding: 3rem 1.5rem;
@@ -687,10 +770,22 @@ section h2::after {
 
   .skills-grid {
     justify-content: center;
+    gap: 10px;
+  }
+  .skill-badge {
+    font-size: 0.9rem;
+    padding: 10px 20px;
   }
 
   .project-grid {
     grid-template-columns: 1fr;
+  }
+  .project-card {
+    padding: 25px 20px;
+  }
+
+  .connect-section {
+    padding: 50px 20px;
   }
 
   .contact-modal {
