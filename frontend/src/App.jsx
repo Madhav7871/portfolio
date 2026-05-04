@@ -163,7 +163,7 @@ const Portfolio = () => {
               rel="noreferrer"
               className="btn btn-primary"
             >
-              Explore GitHub
+              GitHub
             </a>
             <a
               href={socialLinks.linkedin}
@@ -171,7 +171,7 @@ const Portfolio = () => {
               rel="noreferrer"
               className="btn btn-secondary"
             >
-              Connect on LinkedIn
+              LinkedIn
             </a>
           </div>
         </div>
